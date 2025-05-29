@@ -29,14 +29,18 @@ async def start_handler(message: types.Message):
 # Обработка кнопки "Получить чеклист"
 @dp.message_handler(lambda message: message.text == "📄 Получить чеклист")
 async def send_checklist(message: types.Message):
-    with open("course.pdf", "rb") as pdf:
-        await message.answer_document(pdf, caption="Вот твой чеклист 💼")
+    file_path = "course.pdf"
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as pdf:
+            await message.answer_document(pdf, caption="Вот твой чеклист 💼")
+    else:
+        await message.answer("❌ Ошибка: файл не найден.")
 
 # Обработка кнопки "Купить через Boosty"
 @dp.message_handler(lambda message: message.text == "💰 Купить через Boosty")
 async def send_boosty_link(message: types.Message):
-    await message.answer("Оплата и доступ к курсу: https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link")
+    await message.answer("🔗 Ссылка на покупку курса: https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link")
 
-# Запуск
+# Запуск бота
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
