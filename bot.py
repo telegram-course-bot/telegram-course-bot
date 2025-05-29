@@ -13,34 +13,17 @@ dp = Dispatcher(bot)
 # Команда /start
 @dp.message_handler(commands=["start"])
 async def start_handler(message: types.Message):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons = [
-        "📄 Получить чеклист",
-        "💰 Купить через Boosty"
-    ]
-    keyboard.add(*buttons)
-
-    await message.answer(
-        "👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\n"
-        "Вот что поможет тебе прямо сейчас:",
-        reply_markup=keyboard
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    
+    keyboard.add(
+        types.InlineKeyboardButton("📄 Получить чеклист", url="https://t.me/irina_s_vetriny/228?comment=1724"),
+        types.InlineKeyboardButton("📦 Смотреть демо-урок", url="https://boosty.to/irina_s_vitriny"),
+        types.InlineKeyboardButton("📚 Программа курса", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"),
+        types.InlineKeyboardButton("💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny"),
+        types.InlineKeyboardButton("❓ Задать вопрос", url="https://t.me/Grenka_IR")
     )
 
-# Обработка кнопки "Получить чеклист"
-@dp.message_handler(lambda message: message.text == "📄 Получить чеклист")
-async def send_checklist(message: types.Message):
-    file_path = "course.pdf"
-    if os.path.exists(file_path):
-        with open(file_path, "rb") as pdf:
-            await message.answer_document(pdf, caption="Вот твой чеклист 💼")
-    else:
-        await message.answer("❌ Ошибка: файл не найден.")
+    await message.answer("👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\nВот что поможет тебе прямо сейчас:", reply_markup=keyboard)
 
-# Обработка кнопки "Купить через Boosty"
-@dp.message_handler(lambda message: message.text == "💰 Купить через Boosty")
-async def send_boosty_link(message: types.Message):
-    await message.answer("🔗 Ссылка на покупку курса: https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link")
-
-# Запуск бота
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
