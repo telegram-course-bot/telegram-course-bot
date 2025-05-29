@@ -1,43 +1,33 @@
-import logging
 import os
 from aiogram import Bot, Dispatcher, types
+from aiogram.enums import ParseMode
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.utils import executor
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.fsm.storage.memory import MemoryStorage
+import asyncio
+from aiogram import F
 from dotenv import load_dotenv
 
-# Загрузка переменных окружения из .env
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
+bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher(storage=MemoryStorage())
 
-# Включение логирования
-logging.basicConfig(level=logging.INFO)
-
-# Инициализация бота и диспетчера
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
-
-# Удаление вебхука перед запуском бота
-async def on_startup(dp):
-    await bot.delete_webhook(drop_pending_updates=True)
-
-# Обработка команды /start
-@dp.message_handler(commands=["start"])
-async def send_welcome(message: types.Message):
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("📄 Получить чеклист", url="https://t.me/irina_s_vetriny/228"),
-        InlineKeyboardButton("🎥 Смотреть демо-урок", callback_data="demo"),
-        InlineKeyboardButton("📦 Программа курса", callback_data="program"),
-        InlineKeyboardButton("💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"),
-        InlineKeyboardButton("❓ Задать вопрос", url="https://t.me/Grenka_IR")
+@dp.message(F.text == "/start")
+async def start(message: types.Message):
+    kb = InlineKeyboardBuilder()
+    kb.row(InlineKeyboardButton(text="📋 Получить чеклист", url="https://t.me/irina_s_vetriny/228"))
+    kb.row(InlineKeyboardButton(text="🎓 Смотреть демо-урок", url="https://example.com/demo"))
+    kb.row(InlineKeyboardButton(text="📦 Программа курса", url="https://example.com/program"))
+    kb.row(InlineKeyboardButton(text="💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"))
+    kb.row(InlineKeyboardButton(text="❓ Задать вопрос", url="https://t.me/Grenka_IR"))
+    await message.answer(
+        "👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\nВот что поможет тебе прямо сейчас:",
+        reply_markup=kb.as_markup()
     )
 
-    text = (
-        "👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\n"
-        "Вот что поможет тебе прямо сейчас:"
-    )
-    await message.answer(text, reply_markup=keyboard)
+async def main():
+    await dp.start_polling(bot)
 
-# Запуск бота
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+    asyncio.run(main())
