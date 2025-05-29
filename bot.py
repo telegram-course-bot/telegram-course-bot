@@ -1,33 +1,40 @@
+from aiogram import Bot, Dispatcher, executor, types
+import logging
 import os
-from aiogram import Bot, Dispatcher, types
-from aiogram.enums import ParseMode
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.fsm.storage.memory import MemoryStorage
-import asyncio
-from aiogram import F
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv("TOKEN")
-bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
-dp = Dispatcher(storage=MemoryStorage())
+TOKEN = os.getenv('TOKEN')
 
-@dp.message(F.text == "/start")
-async def start(message: types.Message):
-    kb = InlineKeyboardBuilder()
-    kb.row(InlineKeyboardButton(text="📋 Получить чеклист", url="https://t.me/irina_s_vetriny/228"))
-    kb.row(InlineKeyboardButton(text="🎓 Смотреть демо-урок", url="https://example.com/demo"))
-    kb.row(InlineKeyboardButton(text="📦 Программа курса", url="https://example.com/program"))
-    kb.row(InlineKeyboardButton(text="💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"))
-    kb.row(InlineKeyboardButton(text="❓ Задать вопрос", url="https://t.me/Grenka_IR"))
+logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
+
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        types.InlineKeyboardButton("📋 Получить чеклист", url="https://t.me/irina_s_vetriny/228?comment=1724"),
+        types.InlineKeyboardButton("🎥 Смотреть демо-урок", callback_data="demo"),
+        types.InlineKeyboardButton("📦 Программа курса", callback_data="program"),
+        types.InlineKeyboardButton("🔥 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"),
+        types.InlineKeyboardButton("❓ Задать вопрос", url="https://t.me/Grenka_IR")
+    )
     await message.answer(
         "👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\nВот что поможет тебе прямо сейчас:",
-        reply_markup=kb.as_markup()
+        reply_markup=keyboard
     )
 
-async def main():
-    await dp.start_polling(bot)
+@dp.callback_query_handler(lambda c: True)
+async def process_callback(callback_query: types.CallbackQuery):
+    if callback_query.data == 'demo':
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id, "🎥 Демо-урок появится скоро.")
+    elif callback_query.data == 'program':
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id, "📦 Программа курса:\n1. Уверенность\n2. Общение\n3. Практика")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == '__main__':
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
