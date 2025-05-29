@@ -1,12 +1,9 @@
 from aiogram import Bot, Dispatcher, executor, types
-import logging
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv('TOKEN')
-
-logging.basicConfig(level=logging.INFO)
+TOKEN = os.getenv("TOKEN")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -27,14 +24,12 @@ async def send_welcome(message: types.Message):
     )
 
 @dp.callback_query_handler(lambda c: True)
-async def process_callback(callback_query: types.CallbackQuery):
-    if callback_query.data == 'demo':
-        await bot.answer_callback_query(callback_query.id)
-        await bot.send_message(callback_query.from_user.id, "🎥 Демо-урок появится скоро.")
-    elif callback_query.data == 'program':
-        await bot.answer_callback_query(callback_query.id)
-        await bot.send_message(callback_query.from_user.id, "📦 Программа курса:\n1. Уверенность\n2. Общение\n3. Практика")
+async def callback_handler(callback: types.CallbackQuery):
+    await callback.answer()
+    if callback.data == "demo":
+        await callback.message.answer("🎥 Демо-урок появится скоро.")
+    elif callback.data == "program":
+        await callback.message.answer("📦 Программа курса:\n1. Введение\n2. Уверенность\n3. Общение\n4. Практика")
 
-if __name__ == '__main__':
-    from aiogram import executor
+if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
