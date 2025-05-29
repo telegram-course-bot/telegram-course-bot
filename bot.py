@@ -1,21 +1,20 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
-from dotenv import load_dotenv
-import os
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-# Загружаем переменные из .env
-load_dotenv()
-TOKEN = os.getenv("TOKEN")
-
-# Создаём бота и диспетчер
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
-
-# Команда /start
 @dp.message_handler(commands=["start"])
 async def start_handler(message: types.Message):
-    await message.answer("Привет! Бот работает 🔥")
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📋 Получить чеклист",
+            url="https://t.me/irina_s_vetriny/228?comment=1724"
+        ),
+        InlineKeyboardButton(
+            text="💰 Купить курс через Boosty",
+            url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"
+        )
+    )
 
-# Запуск
-if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    await message.answer(
+        "Привет! 🎓 Добро пожаловать! Вот что тебе пригодится:",
+        reply_markup=keyboard
+    )
