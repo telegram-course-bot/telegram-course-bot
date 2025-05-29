@@ -1,8 +1,12 @@
 from aiogram import Bot, Dispatcher, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils import executor
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
+import logging
 import os
+
+# Включаем логирование
+logging.basicConfig(level=logging.INFO)
 
 # Загружаем токен из .env
 load_dotenv()
@@ -12,57 +16,35 @@ TOKEN = os.getenv("TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
-# Команда /start
+# Главное меню
+menu = InlineKeyboardMarkup(row_width=1)
+menu.add(
+    InlineKeyboardButton("📄 Получить чеклист", callback_data="get_checklist"),
+    InlineKeyboardButton("🎥 Смотреть демо-урок", url="https://t.me/irina_s_vetriny/229"),
+    InlineKeyboardButton("📦 Программа курса", url="https://t.me/irina_s_vetriny/230"),
+    InlineKeyboardButton("💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"),
+    InlineKeyboardButton("❓ Задать вопрос", url="https://t.me/irina_s_vetriny"),
+    InlineKeyboardButton("💬 Оставить отзыв", url="https://t.me/irina_s_vetriny")
+)
+
 @dp.message_handler(commands=["start"])
 async def start_handler(message: types.Message):
-    # Inline кнопки
-    inline_kb = InlineKeyboardMarkup(row_width=1)
-    inline_kb.add(
-        InlineKeyboardButton("📋 Получить чеклист", url="https://t.me/irina_s_vetriny/228?comment=1724"),
-        InlineKeyboardButton("🎥 Смотреть демо-урок", url="https://t.me/irina_s_vetriny/229"),
-        InlineKeyboardButton("📦 Программа курса", url="https://t.me/irina_s_vetriny/230"),
-        InlineKeyboardButton("💰 Купить курс через Boosty", url="https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link"),
-        InlineKeyboardButton("❓ Задать вопрос", url="https://t.me/irina_s_vetriny"),
-        InlineKeyboardButton("💬 Оставить отзыв", url="https://t.me/irina_s_vetriny")
-    )
-
-    # Reply кнопки
-    reply_kb = ReplyKeyboardMarkup(resize_keyboard=True)
-    reply_kb.add(
-        KeyboardButton("📋 Получить чеклист"),
-        KeyboardButton("💰 Купить через Boosty")
-    )
-
+    logging.info(f"User {message.from_user.id} started the bot.")
     await message.answer(
-        "👋 Привет! Добро пожаловать в *курс уверенного общения с женщинами*!\n\n"
-        "Вот что поможет тебе прямо сейчас:",
-        parse_mode="Markdown",
-        reply_markup=inline_kb
-    )
-    await message.answer("👇 Или выбери действие ниже:", reply_markup=reply_kb)
-
-# Команда /feedback
-@dp.message_handler(commands=["feedback"])
-async def feedback_handler(message: types.Message):
-    text = message.get_args()
-    if not text:
-        await message.reply("Пожалуйста, напиши отзыв после команды, например:\n/feedback Спасибо за курс!")
-        return
-
-    admin_id = 394515067  # Твой Telegram ID
-
-    feedback_text = (
-        f"💬 *Новый отзыв от* [{message.from_user.full_name}](tg://user?id={message.from_user.id}):\n\n"
-        f"{text}"
+        "👋 Привет! Добро пожаловать в курс уверенного общения с женщинами!\n\nВот что поможет тебе прямо сейчас:",
+        reply_markup=menu
     )
 
+@dp.callback_query_handler(lambda c: c.data == "get_checklist")
+async def send_checklist(callback_query: types.CallbackQuery):
+    logging.info(f"User {callback_query.from_user.id} requested checklist.")
     try:
-        await bot.send_message(admin_id, feedback_text, parse_mode="Markdown")
-        await message.reply("Спасибо за отзыв! 🙌")
+        with open("checklist.pdf", "rb") as doc:
+            await bot.send_document(callback_query.from_user.id, doc)
+        await bot.answer_callback_query(callback_query.id)
     except Exception as e:
-        await message.reply("Не удалось отправить отзыв. Попробуйте позже.")
-        print(e)
+        logging.error(f"Ошибка при отправке файла: {e}")
+        await bot.send_message(callback_query.from_user.id, "🚫 Ошибка: файл не найден.")
 
-# Запуск бота
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
