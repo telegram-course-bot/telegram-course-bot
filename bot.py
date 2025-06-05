@@ -20,10 +20,10 @@ async def send_welcome(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == "start_test")
 async def start_test(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "🧠 Начнём тест: Насколько ты уверена в себе в отношениях?\n(Ответь: да/нет)")
+    await bot.send_message(callback_query.from_user.id, "🧠 Начнём тест: Насколько ты уверена в себе в отношениях?\nОтветь: да или нет.
 
 1. Часто ли ты сомневаешься в своих действиях?
-(Ответь: да/нет)")
+Ответь: да или нет.
 
 # Ответ на текст
 @dp.message_handler(lambda message: message.text.lower() in ["да", "нет"])
