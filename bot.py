@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from aiogram.utils import executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -17,64 +17,54 @@ bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
-# Курсы
-course = [
-    "Урок 1: Введение в отношения.",
-    "Урок 2: Эффективное общение.",
-    "Урок 3: Решение конфликтов.",
-    "Урок 4: Поддержание доверия.",
-    "Урок 5: Завершение курса."
-]
-
-# Состояния курса
-class CourseStates(StatesGroup):
-    lesson = State()
-
 # Состояния теста
 class TestStates(StatesGroup):
     q1 = State()
     q2 = State()
     q3 = State()
 
-# Главное меню
+# Главное маркетинговое меню
+def main_menu():
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add("📋 Получить чеклист", "🎥 Смотреть демо-урок")
+    keyboard.add("📦 Программа курса", "🔥 Купить курс через Boosty")
+    keyboard.add("🧠 Пройти мини-тест", "❓ Задать вопрос")
+    return keyboard
+
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("📘 Начать курс", callback_data='start_course'))
-    keyboard.add(InlineKeyboardButton("🧠 Пройти мини-тест", callback_data='start_test'))
-    await message.answer("Привет! Добро пожаловать в курс по отношениям.
-Выбери, с чего начнём:", reply_markup=keyboard)
+    await message.answer("Добро пожаловать! Выберите действие:", reply_markup=main_menu())
 
-# Курс
-@dp.callback_query_handler(lambda c: c.data == 'start_course')
-async def start_course(callback_query: types.CallbackQuery, state: FSMContext):
-    await state.update_data(lesson_number=0)
-    await CourseStates.lesson.set()
-    await send_lesson(callback_query.message, state)
+# Реакции на кнопки основного меню
+@dp.message_handler(lambda m: m.text == "📋 Получить чеклист")
+async def checklist(message: types.Message):
+    await message.answer("Вот твой чеклист ✅:
+1. Подумай о целях...
+2. ...")
 
-@dp.callback_query_handler(lambda c: c.data == 'next_lesson', state=CourseStates.lesson)
-async def next_lesson(callback_query: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    lesson_number = data.get('lesson_number', 0) + 1
-    if lesson_number < len(course):
-        await state.update_data(lesson_number=lesson_number)
-        await send_lesson(callback_query.message, state)
-    else:
-        await callback_query.message.answer("Курс завершен! Спасибо за участие.")
-        await state.finish()
+@dp.message_handler(lambda m: m.text == "🎥 Смотреть демо-урок")
+async def demo_lesson(message: types.Message):
+    await message.answer("🎬 Демо-урок: https://t.me/your_demo_lesson")
 
-async def send_lesson(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    lesson_number = data.get('lesson_number', 0)
-    lesson = course[lesson_number]
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("Далее", callback_data='next_lesson'))
-    await message.answer(f"{lesson}", reply_markup=keyboard)
+@dp.message_handler(lambda m: m.text == "📦 Программа курса")
+async def course_outline(message: types.Message):
+    await message.answer("📚 Программа курса:
+- Урок 1
+- Урок 2
+...")
 
-# Тест
-@dp.callback_query_handler(lambda c: c.data == 'start_test')
-async def start_test(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.message.answer("🧠 Вопрос 1: Ты легко выражаешь свои чувства?")
+@dp.message_handler(lambda m: m.text == "🔥 Купить курс через Boosty")
+async def buy_course(message: types.Message):
+    await message.answer("🚀 Купить курс: https://boosty.to/irina_s_vitriny/posts/80389461-2021-43f0-9c20-08668971a32b?share=post_link")
+
+@dp.message_handler(lambda m: m.text == "❓ Задать вопрос")
+async def ask_question(message: types.Message):
+    await message.answer("Напиши свой вопрос, и я передам его автору курса.")
+
+# Тест — запуск из меню
+@dp.message_handler(lambda m: m.text == "🧠 Пройти мини-тест")
+async def start_test(message: types.Message, state: FSMContext):
+    await message.answer("🧠 Вопрос 1: Ты легко выражаешь свои чувства?")
     await TestStates.q1.set()
 
 @dp.message_handler(state=TestStates.q1)
